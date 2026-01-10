@@ -1,230 +1,189 @@
-# TaskFlow AI - Project Management Tool
+# TaskFlow AI - MERN Project
 
-A modern, clean, and intuitive project management application built with React and Vite. This is a beginner-friendly MERN stack frontend project designed to manage tasks, projects, and provide AI-assisted insights.
+A complete project management application built with the MERN stack (MongoDB, Express, React, Node.js). This repository is organized as a clean monorepo with separate frontend and backend folders.
 
-## 🎯 Project Overview
-
-TaskFlow AI is a Jira/Trello-like project management tool that helps users:
-- Manage multiple projects with progress tracking
-- Organize tasks using a Kanban board (To Do, In Progress, Done)
-- Get AI-powered suggestions and insights
-- Track project analytics and completion rates
-- Manage user settings and preferences
-
-## 🛠️ Tech Stack
-
-- **Frontend Framework:** React 19.2.0
-- **Build Tool:** Vite 7.2.4
-- **Routing:** React Router DOM
-- **Styling:** Pure CSS with CSS Variables
-- **State Management:** React useState/useEffect (lifting state)
-
-## 📁 Project Structure
+## 📁 Repository Structure
 
 ```
 TaskFlow-AI/
-├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── Navbar.jsx
-│   │   ├── Sidebar.jsx
-│   │   ├── StatCard.jsx
-│   │   ├── ProjectCard.jsx
-│   │   ├── TaskCard.jsx
-│   │   └── ProgressBar.jsx
-│   ├── pages/              # Main application pages
-│   │   ├── Login.jsx
-│   │   ├── Register.jsx
-│   │   ├── Dashboard.jsx
-│   │   ├── Projects.jsx
-│   │   ├── KanbanBoard.jsx
-│   │   ├── AIAssistant.jsx
-│   │   ├── Insights.jsx
-│   │   └── Settings.jsx
-│   ├── data/               # Mock data
-│   │   └── mockData.js
-│   ├── utils/              # Helper functions
-│   ├── App.jsx             # Main app component with routing
-│   ├── main.jsx            # Entry point
-│   └── index.css           # Global styles
-├── public/                 # Static assets
-├── package.json
-└── README.md
+├── client/          # React + Vite frontend
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── data/
+│   │   ├── utils/
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── public/
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   └── eslint.config.js
+│
+├── server/          # Node.js + Express backend
+│   ├── src/
+│   │   ├── config/          # Database & config setup
+│   │   ├── controllers/     # Route logic & business logic
+│   │   ├── routes/          # API endpoints
+│   │   ├── models/          # MongoDB schemas
+│   │   ├── middleware/      # Auth, error handling
+│   │   ├── utils/           # Helper functions
+│   │   └── app.js           # Express app setup
+│   ├── server.js            # Entry point
+│   ├── package.json
+│   ├── .env                 # Environment variables
+│   └── .gitignore
+│
+├── README.md        # This file
+└── .gitignore      # Root gitignore
 ```
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Node.js (v16 or higher)
+- Node.js (v16+)
 - npm or yarn
+- MongoDB (local or Atlas)
 
-### Installation
+### Frontend Setup
 
-1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd TaskFlow-AI
-```
-
-2. Install dependencies:
-```bash
+cd client
 npm install
-```
-
-3. Start the development server:
-```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to:
-```
-http://localhost:5173
+Frontend runs on: `http://localhost:5173`
+
+### Backend Setup
+
+```bash
+cd server
+npm install
+npm run dev
 ```
 
-### Default Login
+Backend runs on: `http://localhost:5000`
 
-The app uses localStorage for simple authentication. You can log in with any email and password.
+## 📚 Documentation
+
+- **Client README:** See [client/](./client/) for frontend documentation
+- **Component Guide:** Check [COMPONENTS.md](./client/COMPONENTS.md) for component documentation
+- **Quick Start:** See [QUICK_START.md](./client/QUICK_START.md) for usage guide
+
+## 🛠️ Tech Stack
+
+### Frontend
+- React 19.2.0
+- Vite 7.2.4
+- React Router DOM
+- Pure CSS with CSS Variables
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB + Mongoose
+- JWT Authentication
+- CORS
+
+## 📋 Available Scripts
+
+### Client Commands
+```bash
+cd client
+npm run dev         # Start dev server
+npm run build       # Build for production
+npm run lint        # Run ESLint
+npm run preview     # Preview production build
+```
+
+### Server Commands
+```bash
+cd server
+npm run dev         # Start dev server with nodemon
+npm start           # Start production server
+```
+
+## 🔧 Environment Variables
+
+### Server (.env)
+Create a `.env` file in the `server/` folder:
+
+```
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/taskflow-ai
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRE=7d
+CLIENT_URL=http://localhost:5173
+```
 
 ## ✨ Features
 
-### 🔐 Authentication
-- Login and Register pages
-- Simple form validation
-- Protected routes with authentication guard
+### Frontend
+- 🔐 Authentication (Login/Register)
+- 🏠 Dashboard with stats
+- 📁 Project management
+- 🧩 Kanban board
+- 🤖 AI Assistant interface
+- 📊 Analytics & Insights
+- ⚙️ Settings management
 
-### 🏠 Dashboard
-- **Statistics Cards:** Total tasks, completed, in progress, overdue
-- **Active Projects:** Quick overview with progress bars
-- **Recent Activity:** Timeline of project updates
-- **Overall Progress:** Visual progress tracking
-
-### 📁 Projects Page
-- View all projects as cards
-- Create new projects with modal
-- Each project shows:
-  - Name and description
-  - Progress percentage
-  - Task completion stats
-  - Quick access to Kanban board
-
-### 🧩 Kanban Board
-- Three columns: To Do, In Progress, Done
-- Task cards with:
-  - Title and description
-  - Priority badges (High, Medium, Low)
-  - Due dates
-  - Move buttons between columns
-- Add new tasks with modal
-- Project-specific task management
-
-### 🤖 AI Assistant
-- Chat-style interface
-- Quick action buttons:
-  - Generate tasks for projects
-  - Create sprint plans
-  - Summarize project status
-  - Identify blockers
-- Predefined intelligent responses
-- Message history
-- Extendable for real AI integration
-
-### 📊 Insights Page
-- **Tasks by Status:** Visual distribution (To Do, In Progress, Done)
-- **Tasks by Priority:** Priority-based breakdown
-- **Project Completion:** Bar chart comparison
-- **AI Suggestions:** Rule-based recommendations
-  - Break down large tasks
-  - Address overdue items
-  - Balance workload
-
-### ⚙️ Settings
-- **Profile Management:** Update name, email, role
-- **Change Password:** Password update form
-- **Notification Preferences:** Toggle various notifications
-- **Appearance:** Dark mode toggle (coming soon)
-
-## 🎨 Design Principles
-
-- **Clean & Modern:** Professional SaaS-like interface
-- **Consistent:** CSS variables for unified theming
-- **Responsive:** Works on desktop and tablet
-- **Accessible:** Clear typography and color contrast
-- **Intuitive:** Easy navigation with persistent sidebar
-
-## 🔄 State Management
-
-Simple and clear state management using:
-- `useState` for local component state
-- `useEffect` for side effects
-- Props for parent-child communication
-- localStorage for authentication state
-
-No Redux or complex state management - keeping it beginner-friendly!
-
-## 🎯 Why This Architecture?
-
-### Component Organization
-- **Reusable Components:** Small, focused components (Sidebar, Navbar, Cards)
-- **Page Components:** Feature-complete pages combining multiple components
-- **Data Separation:** Mock data isolated in `/data` folder
-- **Clear Naming:** Component names describe their purpose
-
-### Routing Strategy
-- Protected routes with authentication guard
-- Layout wrapper for authenticated pages
-- Automatic redirects based on auth state
-
-### Styling Approach
-- CSS Variables for easy theming
-- Component-specific CSS files
-- No CSS-in-JS complexity
-- Easy to customize and extend
-
-## 📈 Future Enhancements
-
-Ready for backend integration:
-- Connect to REST API endpoints
-- Real authentication with JWT
-- Database persistence
+### Backend (To Be Implemented)
+- User authentication & JWT
+- Project CRUD operations
+- Task management
 - Real-time updates
-- Drag-and-drop for Kanban board
-- Dark mode implementation
-- Real AI/ML integration
+- Data validation
+- Error handling
+
+## 📈 Development Workflow
+
+1. **Frontend Development** → Changes in `client/` folder
+2. **Backend Development** → Changes in `server/` folder
+3. **Integration** → Connect frontend APIs to backend endpoints
+
+## 🚢 Deployment
+
+### Frontend (Netlify/Vercel)
+```bash
+cd client
+npm run build
+# Deploy the dist/ folder
+```
+
+### Backend (Heroku/Railway/AWS)
+```bash
+cd server
+npm start
+# Set environment variables on hosting platform
+```
+
+## 📝 Project Status
+
+- ✅ Frontend: Complete with all features
+- 🔄 Backend: Basic structure ready, implementation pending
 
 ## 🤝 Contributing
 
-This project is designed for learning. Feel free to:
-- Add new features
-- Improve existing functionality
-- Enhance styling
-- Add animations
-- Integrate with backend
+1. Make changes in appropriate folder (client/ or server/)
+2. Test thoroughly
+3. Commit with descriptive messages
+4. Push to repository
 
-## 📝 License
+## 📄 License
 
-MIT License - feel free to use this for learning and portfolio projects.
+MIT License - Feel free to use for learning and portfolio projects.
 
 ## 🎓 Learning Outcomes
 
-By building this project, you'll learn:
-- React component architecture
-- React Router for navigation
-- Form handling and validation
-- State management patterns
-- CSS variables and modern layouts
-- Project structure best practices
-- Building production-ready UI
-
-## 🙏 Acknowledgments
-
-Built with ❤️ as a portfolio-ready MERN project for beginners.
+- ✅ MERN stack architecture
+- ✅ Monorepo organization
+- ✅ Frontend-backend separation
+- ✅ API integration patterns
+- ✅ Full-stack development workflow
 
 ---
 
-**Note:** This is the frontend only. Backend integration can be added separately using Node.js, Express, and MongoDB.
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Happy Coding!** 🎉
