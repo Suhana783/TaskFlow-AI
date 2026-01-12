@@ -102,8 +102,7 @@ const KanbanBoard = () => {
         <div className="page-content">
           <div className="empty-state">
             <h3>Project not found</h3>
-            <p>Please select a valid project</p>
-            <Link to="/projects" className="btn-primary">Go to Projects</Link>
+            <Link to="/projects" className="btn-primary" style={{ marginTop: '1rem' }}>Go to Projects</Link>
           </div>
         </div>
       </div>
