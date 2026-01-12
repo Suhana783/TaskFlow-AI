@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { user } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 import './Settings.css';
 
 const Settings = () => {
+  const { currentUser } = useAuth();
   const [profile, setProfile] = useState({
-    name: user.name,
-    email: user.email,
-    role: user.role
+    name: '',
+    email: '',
+    role: 'User'
   });
 
   const [notifications, setNotifications] = useState({
@@ -16,6 +17,17 @@ const Settings = () => {
     projectUpdates: false,
     weeklyDigest: true
   });
+
+  useEffect(() => {
+    // Load current user's profile information
+    if (currentUser) {
+      setProfile({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        role: 'Project Manager'
+      });
+    }
+  }, [currentUser]);
 
   const handleProfileChange = (e) => {
     setProfile({

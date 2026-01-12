@@ -1,8 +1,11 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
 
   const menuItems = [
     { path: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -12,6 +15,14 @@ const Sidebar = () => {
     { path: '/insights', icon: '📈', label: 'Insights' },
     { path: '/settings', icon: '⚙️', label: 'Settings' }
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // Get user's first letter for avatar
+  const avatarLetter = currentUser?.name?.charAt(0).toUpperCase() || 'U';
 
   return (
     <div className="sidebar">
@@ -35,15 +46,19 @@ const Sidebar = () => {
 
       <div className="sidebar-footer">
         <div className="user-profile">
-          <div className="user-avatar">S</div>
+          <div className="user-avatar">{avatarLetter}</div>
           <div className="user-info">
-            <p className="user-name">Suhana</p>
-            <p className="user-email">suhana@taskflow.com</p>
+            <p className="user-name">{currentUser?.name || 'User'}</p>
+            <p className="user-email">{currentUser?.email || 'user@example.com'}</p>
           </div>
         </div>
-        <Link to="/login" className="logout-btn">
+        <button 
+          onClick={handleLogout} 
+          className="logout-btn"
+          style={{ border: 'none', background: 'none', cursor: 'pointer', width: '100%' }}
+        >
           <span>🚪</span> Logout
-        </Link>
+        </button>
       </div>
     </div>
   );

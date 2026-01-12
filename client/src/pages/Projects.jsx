@@ -1,16 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import ProjectCard from '../components/ProjectCard';
-import { projects as initialProjects } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 import './Projects.css';
 
 const Projects = () => {
-  const [projects, setProjects] = useState(initialProjects);
+  const { getUserData, saveUserData } = useAuth();
+  const [userData, setUserData] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [newProject, setNewProject] = useState({
     name: '',
     description: ''
   });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Load user's data from localStorage
+    const data = getUserData();
+    setUserData(data);
+    setLoading(false);
+  }, []);
+
+  const projects = userData?.projects || [];
 
   const handleInputChange = (e) => {
     setNewProject({
@@ -21,8 +32,14 @@ const Projects = () => {
 
   const handleCreateProject = (e) => {
     e.preventDefault();
+
+    if (!newProject.name.trim() || !newProject.description.trim()) {
+      alert('Please fill in all fields');
+      return;
+    }
+
     const project = {
-      id: projects.length + 1,
+      id: Date.now(),
       name: newProject.name,
       description: newProject.description,
       progress: 0,
@@ -31,10 +48,33 @@ const Projects = () => {
       startDate: new Date().toLocaleDateString('en-GB'),
       tasks: []
     };
-    setProjects([...projects, project]);
+
+    // Update user data with new project
+    const updatedData = {
+      ...userData,
+      projects: [...projects, project],
+      activityLog: [
+        ...(userData?.activityLog || []),
+        {
+          id: Date.now(),
+          action: 'created',
+          title: project.name,
+          project: project.name,
+          type: 'created',
+          time: new Date().toLocaleTimeString('en-US', { hour12: false })
+        }
+      ]
+    };
+
+    saveUserData(updatedData);
+    setUserData(updatedData);
     setNewProject({ name: '', description: '' });
     setShowModal(false);
   };
+
+  if (loading) {
+    return <div className="page-container"><p>Loading...</p></div>;
+  }
 
   return (
     <div className="page-container">
@@ -53,11 +93,18 @@ const Projects = () => {
           </button>
         </div>
 
-        <div className="projects-grid">
-          {projects.map(project => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
+        {projects.length === 0 ? (
+          <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#666' }}>
+            <p style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>📭 No projects yet</p>
+            <p style={{ color: '#999', marginBottom: '2rem' }}>Create your first project by clicking the button above</p>
+          </div>
+        ) : (
+          <div className="projects-grid">
+            {projects.map(project => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Create Project Modal */}

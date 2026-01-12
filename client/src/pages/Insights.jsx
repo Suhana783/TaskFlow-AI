@@ -1,8 +1,54 @@
+import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { chartData } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 import './Insights.css';
 
 const Insights = () => {
+  const { getUserData } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const data = getUserData();
+    setUserData(data);
+    setLoading(false);
+  }, []);
+
+  if (loading) {
+    return <div className="page-container"><p>Loading...</p></div>;
+  }
+
+  const projects = userData?.projects || [];
+  const hasData = projects.length > 0;
+
+  if (!hasData) {
+    return (
+      <div className="page-container">
+        <Navbar 
+          title="Progress & Insights" 
+          subtitle="Analytics and recommendations for your projects" 
+        />
+        
+        <div className="page-content">
+          <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#666' }}>
+            <p style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>📊 No data yet</p>
+            <p style={{ color: '#999', marginBottom: '2rem' }}>Create projects and tasks to see insights and analytics</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate stats from user's data
+  const allTasks = projects.flatMap(p => p.tasks || []);
+  const todoTasks = allTasks.filter(t => t.status === 'todo').length;
+  const inProgressTasks = allTasks.filter(t => t.status === 'in-progress').length;
+  const doneTasks = allTasks.filter(t => t.status === 'done').length;
+  const totalTasks = allTasks.length;
+
+  const highPriorityTasks = allTasks.filter(t => t.priority === 'high').length;
+  const mediumPriorityTasks = allTasks.filter(t => t.priority === 'medium').length;
+
   return (
     <div className="page-container">
       <Navbar 
@@ -17,26 +63,44 @@ const Insights = () => {
             <h3 className="insight-title">Tasks by Status</h3>
             <div className="chart-container">
               <div className="pie-chart">
-                {chartData.tasksByStatus.map((item, index) => (
-                  <div key={index} className="chart-item">
-                    <div 
-                      className="chart-color-box" 
-                      style={{ backgroundColor: item.color }}
-                    ></div>
-                    <span className="chart-label">{item.label}: {item.value}</span>
-                  </div>
-                ))}
+                <div className="chart-item">
+                  <div 
+                    className="chart-color-box" 
+                    style={{ backgroundColor: '#3b82f6' }}
+                  ></div>
+                  <span className="chart-label">To Do: {todoTasks}</span>
+                </div>
+                <div className="chart-item">
+                  <div 
+                    className="chart-color-box" 
+                    style={{ backgroundColor: '#fbbf24' }}
+                  ></div>
+                  <span className="chart-label">In Progress: {inProgressTasks}</span>
+                </div>
+                <div className="chart-item">
+                  <div 
+                    className="chart-color-box" 
+                    style={{ backgroundColor: '#10b981' }}
+                  ></div>
+                  <span className="chart-label">Done: {doneTasks}</span>
+                </div>
               </div>
               <div className="pie-visual">
-                <div className="pie-segment blue" style={{ '--percentage': '20%' }}>
-                  <span>To Do: 1</span>
-                </div>
-                <div className="pie-segment yellow" style={{ '--percentage': '40%' }}>
-                  <span>In Progress: 2</span>
-                </div>
-                <div className="pie-segment green" style={{ '--percentage': '40%' }}>
-                  <span>Done: 2</span>
-                </div>
+                {todoTasks > 0 && (
+                  <div className="pie-segment blue" style={{ '--percentage': `${(todoTasks / totalTasks) * 100}%` }}>
+                    <span>To Do: {todoTasks}</span>
+                  </div>
+                )}
+                {inProgressTasks > 0 && (
+                  <div className="pie-segment yellow" style={{ '--percentage': `${(inProgressTasks / totalTasks) * 100}%` }}>
+                    <span>In Progress: {inProgressTasks}</span>
+                  </div>
+                )}
+                {doneTasks > 0 && (
+                  <div className="pie-segment green" style={{ '--percentage': `${(doneTasks / totalTasks) * 100}%` }}>
+                    <span>Done: {doneTasks}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -46,46 +110,58 @@ const Insights = () => {
             <h3 className="insight-title">Tasks by Priority</h3>
             <div className="chart-container">
               <div className="pie-chart">
-                {chartData.tasksByPriority.map((item, index) => (
-                  <div key={index} className="chart-item">
-                    <div 
-                      className="chart-color-box" 
-                      style={{ backgroundColor: item.color }}
-                    ></div>
-                    <span className="chart-label">{item.label}: {item.value}</span>
-                  </div>
-                ))}
+                <div className="chart-item">
+                  <div 
+                    className="chart-color-box" 
+                    style={{ backgroundColor: '#ef4444' }}
+                  ></div>
+                  <span className="chart-label">High: {highPriorityTasks}</span>
+                </div>
+                <div className="chart-item">
+                  <div 
+                    className="chart-color-box" 
+                    style={{ backgroundColor: '#fbbf24' }}
+                  ></div>
+                  <span className="chart-label">Medium: {mediumPriorityTasks}</span>
+                </div>
               </div>
               <div className="pie-visual">
-                <div className="pie-segment red" style={{ '--percentage': '60%' }}>
-                  <span>High: 3</span>
-                </div>
-                <div className="pie-segment yellow" style={{ '--percentage': '40%' }}>
-                  <span>Medium: 2</span>
-                </div>
+                {highPriorityTasks > 0 && (
+                  <div className="pie-segment red" style={{ '--percentage': `${(highPriorityTasks / (highPriorityTasks + mediumPriorityTasks)) * 100}%` }}>
+                    <span>High: {highPriorityTasks}</span>
+                  </div>
+                )}
+                {mediumPriorityTasks > 0 && (
+                  <div className="pie-segment yellow" style={{ '--percentage': `${(mediumPriorityTasks / (highPriorityTasks + mediumPriorityTasks)) * 100}%` }}>
+                    <span>Medium: {mediumPriorityTasks}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
         {/* Project Completion Status */}
-        <div className="insight-card full-width">
-          <h3 className="insight-title">Project Completion Status</h3>
-          <div className="bar-chart">
-            <div className="bar-item">
-              <div className="bar-label">Website Redesign</div>
-              <div className="bar-container">
-                <div className="bar-fill green" style={{ width: '65%' }}>65%</div>
-              </div>
-            </div>
-            <div className="bar-item">
-              <div className="bar-label">Mobile App Development</div>
-              <div className="bar-container">
-                <div className="bar-fill yellow" style={{ width: '30%' }}>30%</div>
-              </div>
+        {projects.length > 0 && (
+          <div className="insight-card full-width">
+            <h3 className="insight-title">Project Completion Status</h3>
+            <div className="bar-chart">
+              {projects.map(project => (
+                <div key={project.id} className="bar-item">
+                  <div className="bar-label">{project.name}</div>
+                  <div className="bar-container">
+                    <div 
+                      className="bar-fill green" 
+                      style={{ width: `${project.progress || 0}%` }}
+                    >
+                      {project.progress || 0}%
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        )}
 
         {/* AI Suggestions */}
         <div className="insight-card full-width">
@@ -93,35 +169,41 @@ const Insights = () => {
             <span className="title-icon">🤖</span> AI Suggestions
           </h3>
           <div className="suggestions-list">
-            <div className="suggestion-item recommendation">
-              <div className="suggestion-header">
-                <span className="suggestion-badge">optimization</span>
-                <span className="suggestion-title">Break down large tasks</span>
+            {totalTasks === 0 ? (
+              <div style={{ padding: '1rem', color: '#666' }}>
+                <p>Start creating tasks to receive personalized suggestions</p>
               </div>
-              <p className="suggestion-text">
-                Consider breaking tasks with descriptions longer than 100 characters into smaller, actionable items.
-              </p>
-            </div>
-
-            <div className="suggestion-item warning">
-              <div className="suggestion-header">
-                <span className="suggestion-badge warning">warning</span>
-                <span className="suggestion-title">Address overdue items</span>
-              </div>
-              <p className="suggestion-text">
-                You have 5 overdue tasks. Prioritize these to get back on track.
-              </p>
-            </div>
-
-            <div className="suggestion-item recommendation">
-              <div className="suggestion-header">
-                <span className="suggestion-badge">optimization</span>
-                <span className="suggestion-title">Balance workload</span>
-              </div>
-              <p className="suggestion-text">
-                In Progress tasks are at 30%. Consider moving more items to active status to maintain momentum.
-              </p>
-            </div>
+            ) : (
+              <>
+                {doneTasks === 0 && totalTasks > 0 && (
+                  <div className="suggestion-item recommendation">
+                    <div className="suggestion-header">
+                      <span className="suggestion-badge">Action</span>
+                      <span className="suggestion-title">Get started with your first task</span>
+                    </div>
+                    <p className="suggestion-description">Move a task to "In Progress" to start making progress</p>
+                  </div>
+                )}
+                {inProgressTasks > 3 && (
+                  <div className="suggestion-item warning">
+                    <div className="suggestion-header">
+                      <span className="suggestion-badge">Optimization</span>
+                      <span className="suggestion-title">High work-in-progress</span>
+                    </div>
+                    <p className="suggestion-description">You have {inProgressTasks} tasks in progress. Consider completing some before starting new ones.</p>
+                  </div>
+                )}
+                {highPriorityTasks > 0 && (
+                  <div className="suggestion-item priority">
+                    <div className="suggestion-header">
+                      <span className="suggestion-badge">Priority</span>
+                      <span className="suggestion-title">Focus on high-priority tasks</span>
+                    </div>
+                    <p className="suggestion-description">You have {highPriorityTasks} high-priority task{highPriorityTasks > 1 ? 's' : ''}. Consider prioritizing these.</p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -1,34 +1,56 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    setError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simple validation
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+
+    // Validation
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Please fill in all fields');
       return;
     }
-    if (formData.name && formData.email && formData.password) {
-      // In real app, register user with backend
-      localStorage.setItem('isAuthenticated', 'true');
+
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    try {
+      register(formData.name, formData.email, formData.password);
       navigate('/dashboard');
+    } catch (err) {
+      setError('Registration failed. Please try again.');
     }
   };
 
@@ -42,6 +64,8 @@ const Register = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
+          {error && <div className="error-message" style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fee2e2', borderRadius: '0.375rem' }}>{error}</div>}
+          
           <div className="form-group">
             <label htmlFor="name">Full Name</label>
             <input

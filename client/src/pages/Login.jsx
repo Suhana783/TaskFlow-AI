@@ -1,28 +1,44 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    setError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simple validation - in real app, you'd authenticate with backend
-    if (formData.email && formData.password) {
-      // Store auth state (in real app, use proper auth tokens)
-      localStorage.setItem('isAuthenticated', 'true');
+    
+    // Validation
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email');
+      return;
+    }
+
+    try {
+      login(formData.email, formData.password);
       navigate('/dashboard');
+    } catch (err) {
+      setError('Login failed. Please try again.');
     }
   };
 
@@ -36,6 +52,8 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
+          {error && <div className="error-message" style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fee2e2', borderRadius: '0.375rem' }}>{error}</div>}
+          
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input

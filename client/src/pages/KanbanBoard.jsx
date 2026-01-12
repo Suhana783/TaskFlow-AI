@@ -1,17 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import TaskCard from '../components/TaskCard';
-import { projects as initialProjects } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 import './KanbanBoard.css';
 
 const KanbanBoard = () => {
   const [searchParams] = useSearchParams();
-  const projectId = parseInt(searchParams.get('project')) || 1;
+  const projectId = parseInt(searchParams.get('project'));
+  const { getUserData, saveUserData } = useAuth();
   
-  const [projects, setProjects] = useState(initialProjects);
-  const currentProject = projects.find(p => p.id === projectId);
-  
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
@@ -20,8 +20,19 @@ const KanbanBoard = () => {
     dueDate: ''
   });
 
+  useEffect(() => {
+    const data = getUserData();
+    setUserData(data);
+    setLoading(false);
+  }, []);
+
+  const projects = userData?.projects || [];
+  const currentProject = projectId ? projects.find(p => p.id === projectId) : null;
+
   const handleMoveTask = (task, newStatus) => {
-    setProjects(projects.map(project => {
+    if (!currentProject) return;
+
+    const updatedProjects = projects.map(project => {
       if (project.id === projectId) {
         return {
           ...project,
@@ -31,31 +42,58 @@ const KanbanBoard = () => {
         };
       }
       return project;
-    }));
+    });
+
+    const updatedData = {
+      ...userData,
+      projects: updatedProjects
+    };
+
+    saveUserData(updatedData);
+    setUserData(updatedData);
   };
 
   const handleAddTask = (e) => {
     e.preventDefault();
+
+    if (!newTask.title.trim()) {
+      alert('Please enter a task title');
+      return;
+    }
+
+    if (!currentProject) return;
+
     const task = {
       id: Date.now(),
       ...newTask,
       status: 'todo'
     };
-    
-    setProjects(projects.map(project => {
+
+    const updatedProjects = projects.map(project => {
       if (project.id === projectId) {
         return {
           ...project,
           tasks: [...project.tasks, task],
-          totalTasks: project.totalTasks + 1
+          totalTasks: (project.totalTasks || 0) + 1
         };
       }
       return project;
-    }));
-    
+    });
+
+    const updatedData = {
+      ...userData,
+      projects: updatedProjects
+    };
+
+    saveUserData(updatedData);
+    setUserData(updatedData);
     setNewTask({ title: '', description: '', priority: 'medium', dueDate: '' });
     setShowAddTask(false);
   };
+
+  if (loading) {
+    return <div className="page-container"><p>Loading...</p></div>;
+  }
 
   if (!currentProject) {
     return (
@@ -64,6 +102,7 @@ const KanbanBoard = () => {
         <div className="page-content">
           <div className="empty-state">
             <h3>Project not found</h3>
+            <p>Please select a valid project</p>
             <Link to="/projects" className="btn-primary">Go to Projects</Link>
           </div>
         </div>
@@ -71,9 +110,9 @@ const KanbanBoard = () => {
     );
   }
 
-  const todoTasks = currentProject.tasks.filter(t => t.status === 'todo');
-  const inProgressTasks = currentProject.tasks.filter(t => t.status === 'in-progress');
-  const doneTasks = currentProject.tasks.filter(t => t.status === 'done');
+  const todoTasks = (currentProject.tasks || []).filter(t => t.status === 'todo');
+  const inProgressTasks = (currentProject.tasks || []).filter(t => t.status === 'in-progress');
+  const doneTasks = (currentProject.tasks || []).filter(t => t.status === 'done');
 
   return (
     <div className="page-container">
