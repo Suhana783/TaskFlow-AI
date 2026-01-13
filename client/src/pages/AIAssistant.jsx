@@ -100,6 +100,101 @@ const AIAssistant = () => {
     setMessages([...messages, userMessage, aiMessage]);
   };
 
+  /**
+   * Generate AI response based on user message and their project data
+   * Uses keyword matching to provide intelligent, context-aware responses
+   */
+  const generateAIResponse = (userMessage, userProjects) => {
+    const message = userMessage.toLowerCase();
+    const projectCount = userProjects.length;
+    
+    // Handle empty state - no projects
+    if (projectCount === 0) {
+      return "You don't have any projects yet. Start by creating one, and I'll help you plan it step by step. 😊";
+    }
+
+    // Calculate task statistics across all projects
+    const allTasks = userProjects.flatMap(p => p.tasks || []);
+    const totalTasks = allTasks.length;
+    const completedTasks = allTasks.filter(t => t.status === 'done').length;
+    const inProgressTasks = allTasks.filter(t => t.status === 'in-progress').length;
+    const todoTasks = allTasks.filter(t => t.status === 'todo').length;
+    
+    // Check for overdue tasks (comparing with today's date)
+    const today = new Date();
+    const overdueTasks = allTasks.filter(task => {
+      if (!task.dueDate || task.status === 'done') return false;
+      const [day, month, year] = task.dueDate.split('/');
+      const dueDate = new Date(year, month - 1, day);
+      return dueDate < today;
+    });
+
+    // 📊 PROGRESS / STATUS KEYWORDS
+    if (message.includes('update') || message.includes('status') || 
+        message.includes('progress') || message.includes('work') || 
+        message.includes('how am i doing') || message.includes('summary')) {
+      return `Here's your current status:\n\n📊 Projects: ${projectCount}\n✅ Completed tasks: ${completedTasks}\n🔄 In progress: ${inProgressTasks}\n📝 To-do: ${todoTasks}\n\nYou're making great progress! Keep up the momentum. 💪`;
+    }
+
+    // 🧱 BLOCKERS / ISSUES KEYWORDS
+    if (message.includes('block') || message.includes('issue') || 
+        message.includes('stuck') || message.includes('problem') || 
+        message.includes('delay') || message.includes('trouble')) {
+      
+      if (overdueTasks.length > 0) {
+        const overdueList = overdueTasks.slice(0, 3).map(t => `• ${t.title} (due ${t.dueDate})`).join('\n');
+        return `I found ${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''}:\n\n${overdueList}\n\n💡 Tip: Focus on these first, or adjust their deadlines if priorities have changed.`;
+      }
+
+      // Find high-priority tasks
+      const highPriorityTasks = allTasks.filter(t => t.priority === 'high' && t.status !== 'done');
+      if (highPriorityTasks.length > 0) {
+        return `I don't see any overdue tasks, but you have ${highPriorityTasks.length} high-priority task${highPriorityTasks.length > 1 ? 's' : ''} to watch:\n\n${highPriorityTasks.slice(0, 3).map(t => `• ${t.title}`).join('\n')}\n\nTackle these one at a time to stay ahead! 🎯`;
+      }
+
+      return "Good news! I don't see any major blockers right now. Your projects are on track. Keep monitoring deadlines and priorities. 👍";
+    }
+
+    // 🧭 NEXT STEPS / PLANNING KEYWORDS
+    if (message.includes('next') || message.includes('plan') || 
+        message.includes('do') || message.includes('suggest') || 
+        message.includes('should i') || message.includes('recommend')) {
+      
+      if (todoTasks > 0) {
+        const nextTodo = allTasks.find(t => t.status === 'todo');
+        return `Here's what I suggest:\n\n1. Move "${nextTodo.title}" to "In Progress"\n2. Break it into smaller steps if needed\n3. Set aside focused time to complete it\n\nYou have ${todoTasks} task${todoTasks > 1 ? 's' : ''} in your backlog. Let's tackle them one by one! 🚀`;
+      }
+
+      if (inProgressTasks > 0) {
+        return `You currently have ${inProgressTasks} task${inProgressTasks > 1 ? 's' : ''} in progress. My recommendation:\n\n✅ Focus on completing those before starting new work\n📌 Avoid multitasking to maintain quality\n\nYou're doing great! 💪`;
+      }
+
+      return `Awesome! You've completed all your tasks. 🎉\n\nTime to plan your next milestone:\n• Review completed work\n• Add new tasks to your projects\n• Celebrate this achievement! 🥳`;
+    }
+
+    // 🙋 GENERAL HELP / CONFUSION KEYWORDS
+    if (message.includes('help') || message.includes('confused') || 
+        message.includes('how') || message.includes('what') || 
+        message.includes('explain') || message.includes('guide')) {
+      return `I'm here to help you manage your projects! 😊\n\nHere's what you can do:\n\n📊 **Projects page**: Create and manage your projects\n📋 **Kanban Board**: Drag tasks between Todo, In Progress, and Done\n🤖 **Quick Actions** (above): Get instant insights\n\nAsk me about your progress, blockers, or next steps anytime!`;
+    }
+
+    // Thanks/Greeting keywords
+    if (message.includes('thank') || message.includes('thanks') || 
+        message.includes('appreciate')) {
+      return "You're very welcome! I'm always here to help you stay organized and productive. 😊";
+    }
+
+    if (message.includes('hello') || message.includes('hi') || 
+        message.includes('hey')) {
+      return `Hello! 👋 Great to see you. You currently have ${projectCount} project${projectCount > 1 ? 's' : ''} and ${totalTasks} task${totalTasks > 1 ? 's' : ''}. How can I assist you today?`;
+    }
+
+    // 🤖 DEFAULT FALLBACK (MOST IMPORTANT)
+    // If no keywords match, provide a friendly generic response
+    return `Thanks for your message! 😊\n\nI'm here to help you manage your projects. You can ask me about:\n• Progress updates\n• Blockers or issues\n• Next steps and planning\n\nOr use the quick action buttons above for instant insights!`;
+  };
+
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
@@ -111,11 +206,13 @@ const AIAssistant = () => {
       time: new Date().toLocaleTimeString('en-US', { hour12: false })
     };
 
-    // Simple response for custom messages
+    // Generate intelligent AI response based on user's message and data
+    const aiResponse = generateAIResponse(inputMessage, projects);
+
     const aiMessage = {
       id: messages.length + 2,
       type: 'ai',
-      content: "I understand your request. In a production environment, I would process this using advanced AI models. For now, try using the quick action buttons above for predefined intelligent responses!",
+      content: aiResponse,
       time: new Date().toLocaleTimeString('en-US', { hour12: false })
     };
 

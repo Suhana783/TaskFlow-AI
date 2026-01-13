@@ -71,6 +71,10 @@ Backend runs on: `http://localhost:5000`
 - **Client README:** See [client/](./client/) for frontend documentation
 - **Component Guide:** Check [COMPONENTS.md](./client/COMPONENTS.md) for component documentation
 - **Quick Start:** See [QUICK_START.md](./client/QUICK_START.md) for usage guide
+- **Implementation Guide:** [IMPLEMENTATION_COMPLETE.md](./IMPLEMENTATION_COMPLETE.md) - Technical details
+- **AI Assistant:** [AI_ASSISTANT_UPGRADE.md](./AI_ASSISTANT_UPGRADE.md) - Intelligent response system
+- **Testing Guide:** [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Comprehensive test cases
+- **Quick Reference:** [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) - Quick lookup guide
 
 ## 🛠️ Tech Stack
 
@@ -126,7 +130,12 @@ CLIENT_URL=http://localhost:5173
 - 🏠 Dashboard with stats
 - 📁 Project management
 - 🧩 Kanban board
-- 🤖 AI Assistant interface
+- 🤖 **AI Assistant with intelligent rule-based responses**
+  - Smart keyword matching (6 response categories)
+  - Automatic overdue task detection
+  - Context-aware suggestions based on your data
+  - Human-like, helpful tone
+  - Always responds - no "not implemented" messages
 - 📊 Analytics & Insights
 - ⚙️ Settings management
 

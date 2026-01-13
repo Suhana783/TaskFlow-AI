@@ -87,14 +87,27 @@ localStorage['taskflow_user@example.com'] = { projects: [], tasks: [], activityL
 - Empty columns show "No tasks" message
 
 ### 9. **AI Assistant** (Updated)
+- **File**: `src/pages/AIAssistant.jsx`
 - Reads current user's projects and tasks
+- **NEW**: Intelligent rule-based response system using keyword matching
 - Detects empty state and provides helpful message:
   ```
-  "You don't have any projects yet. Create one to get started."
+  "You don't have any projects yet. Start by creating one, and I'll help you plan it step by step. 😊"
   ```
-- AI responses now adapt to user's actual data
+- **Response Categories**:
+  - 📊 Progress/Status (keywords: update, status, progress, work, summary)
+  - 🧱 Blockers/Issues (keywords: block, issue, stuck, problem, delay)
+  - 🧭 Next Steps/Planning (keywords: next, plan, do, suggest, recommend)
+  - 🙋 General Help (keywords: help, confused, how, what, guide)
+  - 👋 Greetings & Thanks (keywords: hello, hi, thanks)
+  - 🤖 Smart Default Fallback (for any other input)
+- Automatically detects overdue tasks based on current date
+- Calculates real-time statistics (completed/in-progress/todo tasks)
+- Provides actionable suggestions based on user's actual workload
+- AI responses now adapt to user's actual data with human-like tone
 - Quick actions require projects (with user-friendly messaging)
 - Provides personalized insights based on user data
+- **No generic disclaimers** - always responds helpfully
 
 ### 10. **Insights Page** (Updated)
 - Shows empty state when no projects exist
@@ -180,6 +193,53 @@ localStorage['taskflow_user@example.com'] = { projects: [], tasks: [], activityL
   ]
 }
 ```
+
+## 🤖 AI Assistant Intelligence System
+
+### Rule-Based Response Engine
+Implemented smart keyword matching system in `generateAIResponse()` function:
+
+**Response Categories:**
+1. **Progress/Status Queries**
+   - Keywords: `update`, `status`, `progress`, `work`, `summary`
+   - Response: Shows project count, task breakdown (completed/in-progress/todo), encouraging message
+
+2. **Blockers/Issues Detection**
+   - Keywords: `block`, `issue`, `stuck`, `problem`, `delay`, `trouble`
+   - Automatically calculates overdue tasks using current date
+   - Lists overdue tasks with due dates
+   - Falls back to high-priority tasks if no overdue items
+   - Provides actionable advice
+
+3. **Next Steps/Planning**
+   - Keywords: `next`, `plan`, `do`, `suggest`, `recommend`
+   - Suggests specific tasks to move to "In Progress"
+   - Adapts advice based on current workload
+   - Encourages focused work and completion
+
+4. **General Help/Guidance**
+   - Keywords: `help`, `confused`, `how`, `what`, `explain`, `guide`
+   - Explains app features (Projects, Kanban, Quick Actions)
+   - Friendly onboarding-style responses
+
+5. **Social Interactions**
+   - Greetings: `hello`, `hi`, `hey`
+   - Thanks: `thank`, `thanks`, `appreciate`
+   - Natural, conversational responses
+
+6. **Smart Default Fallback**
+   - Triggers when no keywords match
+   - Always friendly and helpful
+   - Guides users to ask about progress, blockers, or next steps
+   - **NO technical disclaimers or "not implemented" messages**
+
+### Technical Features
+- Converts user input to lowercase for case-insensitive matching
+- Uses `includes()` for flexible keyword detection
+- Processes actual user data (projects, tasks, deadlines)
+- Calculates overdue tasks dynamically using Date objects
+- Provides emoji-enhanced, human-like responses
+- ~150 lines of clean, well-commented logic
 
 ## 🎨 Empty States Implemented
 

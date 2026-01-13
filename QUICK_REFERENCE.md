@@ -39,6 +39,53 @@
 
 ---
 
+## 🤖 AI Assistant Intelligence
+
+### How It Works
+The AI Assistant uses **rule-based keyword matching** to provide intelligent, context-aware responses:
+
+**Response System:**
+```javascript
+generateAIResponse(userMessage, userProjects)
+```
+
+### Keyword Categories
+1. **📊 Progress/Status**: update, status, progress, work, summary
+2. **🧱 Blockers/Issues**: block, issue, stuck, problem, delay, trouble
+3. **🧭 Next Steps**: next, plan, do, suggest, recommend
+4. **🙋 Help**: help, confused, how, what, explain, guide
+5. **👋 Social**: hello, hi, hey, thanks, thank
+6. **🤖 Default**: Always friendly fallback for any other message
+
+### Smart Features
+- ✅ Analyzes your actual project and task data
+- ✅ Automatically detects overdue tasks
+- ✅ Calculates real-time statistics
+- ✅ Provides actionable next steps
+- ✅ Human-like, emoji-enhanced responses
+- ✅ No technical disclaimers
+- ✅ Always helpful and encouraging
+
+### Example Interactions
+```
+User: "What's my status?"
+AI: Shows project count, task breakdown, encouragement
+
+User: "I'm stuck"
+AI: Lists overdue tasks or high-priority items, advice
+
+User: "What should I do next?"
+AI: Suggests specific task to start, next actions
+
+User: "How do I use this?"
+AI: Explains features, guides through app
+
+User: "Random message"
+AI: Friendly fallback response, guidance on what to ask
+```
+
+---
+
 ## 🔑 Key Concepts
 
 ### User-Specific Data Storage

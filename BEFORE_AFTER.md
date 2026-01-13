@@ -75,6 +75,14 @@ if (isAuthenticated) {
 <p className="user-email">suhana@taskflow.com</p>
 ```
 
+**AIAssistant.jsx**:
+```jsx
+// Simple response for custom messages
+const aiMessage = {
+  content: "I understand your request. In a production environment, I would process this using advanced AI models. For now, try using the quick action buttons above for predefined intelligent responses!"  // ❌ Feels broken!
+};
+```
+
 ---
 
 ## 🟢 AFTER: Solutions

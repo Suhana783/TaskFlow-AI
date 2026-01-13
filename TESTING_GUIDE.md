@@ -101,6 +101,44 @@ taskflow_john@example.com = {"projects":[], "tasks":[], "activityLog":[]}
 
 ---
 
+### Test 4: AI Assistant Intelligence
+**Steps**:
+1. Navigate to AI Assistant page
+2. Type different messages to test responses:
+
+**Test Messages**:
+```
+a) "What's my progress?"
+b) "I'm stuck on something"
+c) "What should I do next?"
+d) "How does this work?"
+e) "Hello!"
+f) "Random message xyz"
+```
+
+**Expected Results**:
+- ✅ **Test a**: Shows project/task statistics with encouraging message
+- ✅ **Test b**: Lists overdue tasks OR high-priority tasks with advice
+- ✅ **Test c**: Suggests specific next actions based on your tasks
+- ✅ **Test d**: Explains app features and guides you
+- ✅ **Test e**: Friendly greeting with your current stats
+- ✅ **Test f**: Smart fallback response, helpful and friendly
+- ✅ **NO "AI not implemented" messages**
+- ✅ All responses use actual user data
+- ✅ Responses include emojis and friendly tone
+
+**Empty State Test**:
+1. Log in as a new user with no projects
+2. Ask AI Assistant anything
+3. Should respond: "You don't have any projects yet. Start by creating one, and I'll help you plan it step by step. 😊"
+
+**Overdue Task Test**:
+1. Create a task with due date in the past (e.g., "10/01/2026")
+2. Ask: "Any blockers?"
+3. AI should detect and list the overdue task automatically
+
+---
+
 ### Test 4: Multiple Users (Data Isolation)
 **Steps**:
 1. Logout (click 🚪 Logout)
