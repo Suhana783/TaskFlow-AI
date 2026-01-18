@@ -72,6 +72,34 @@ const Projects = () => {
     setShowModal(false);
   };
 
+  const handleDeleteProject = (project) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${project.name}"? This will also delete all tasks associated with this project.`
+    );
+    
+    if (!confirmDelete) return;
+
+    // Remove project from user data
+    const updatedData = {
+      ...userData,
+      projects: projects.filter(p => p.id !== project.id),
+      activityLog: [
+        ...(userData?.activityLog || []),
+        {
+          id: Date.now(),
+          action: 'deleted',
+          title: project.name,
+          project: project.name,
+          type: 'deleted',
+          time: new Date().toLocaleTimeString('en-US', { hour12: false })
+        }
+      ]
+    };
+
+    saveUserData(updatedData);
+    setUserData(updatedData);
+  };
+
   if (loading) {
     return <div className="page-container"><p>Loading...</p></div>;
   }
@@ -101,7 +129,7 @@ const Projects = () => {
         ) : (
           <div className="projects-grid">
             {projects.map(project => (
-              <ProjectCard key={project.id} project={project} />
+              <ProjectCard key={project.id} project={project} onDelete={handleDeleteProject} />
             ))}
           </div>
         )}

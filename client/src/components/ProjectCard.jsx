@@ -1,12 +1,23 @@
 import { Link } from 'react-router-dom';
 import './ProjectCard.css';
 
-const ProjectCard = ({ project }) => {
+const ProjectCard = ({ project, onDelete }) => {
   return (
     <div className="project-card">
       <div className="project-card-header">
         <div className="project-icon">📁</div>
-        <span className="project-date">{project.startDate}</span>
+        <div className="project-header-right">
+          <span className="project-date">{project.startDate}</span>
+          {onDelete && (
+            <button 
+              onClick={() => onDelete(project)}
+              className="project-delete-btn"
+              title="Delete project"
+            >
+              🗑️
+            </button>
+          )}
+        </div>
       </div>
       
       <h3 className="project-name">{project.name}</h3>
