@@ -24,17 +24,23 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = (name, email, password) => {
-    // Create new user object with empty data
+    // Check if user already exists
+    const userKey = `taskflow_user_${email}`;
+    if (localStorage.getItem(userKey)) {
+      throw new Error('User already exists');
+    }
+
+    // Create new user object with credentials
     const newUser = {
       id: Date.now(),
       name,
       email,
-      password, // In real app, never store plain passwords
+      password, // In real app, this should be hashed on backend
       createdAt: new Date().toISOString()
     };
 
-    // Store user credentials
-    localStorage.setItem('taskflow_auth', JSON.stringify(newUser));
+    // Store user credentials separately
+    localStorage.setItem(userKey, JSON.stringify(newUser));
 
     // Initialize empty user data
     const userData = {
@@ -42,44 +48,53 @@ export const AuthProvider = ({ children }) => {
       tasks: [],
       activityLog: []
     };
-    localStorage.setItem(`taskflow_${email}`, JSON.stringify(userData));
+    localStorage.setItem(`taskflow_data_${email}`, JSON.stringify(userData));
 
-    setCurrentUser(newUser);
+    // Set session
+    const sessionUser = {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email
+    };
+    localStorage.setItem('taskflow_auth', JSON.stringify(sessionUser));
+    setCurrentUser(sessionUser);
     setIsAuthenticated(true);
 
-    return newUser;
+    return sessionUser;
   };
 
   const login = (email, password) => {
-    // In real app, verify with backend
-    // For now, check if user data exists in localStorage
-    const userDataKey = `taskflow_${email}`;
-    const userExists = localStorage.getItem(userDataKey);
+    // Check if user exists and retrieve their stored credentials
+    const userKey = `taskflow_user_${email}`;
+    const storedUserData = localStorage.getItem(userKey);
 
-    if (!userExists) {
-      // User doesn't have any stored data - they can still "login" as a new user
-      // Initialize their empty data structure
-      const userData = {
-        projects: [],
-        tasks: [],
-        activityLog: []
-      };
-      localStorage.setItem(userDataKey, JSON.stringify(userData));
+    if (!storedUserData) {
+      throw new Error('User not found. Please register first.');
     }
 
-    // Create user object (in real app, this would come from backend)
-    const user = {
-      id: Date.now(),
-      name: email.split('@')[0],
-      email,
-      password // In real app, never handle passwords on client
-    };
+    try {
+      const userData = JSON.parse(storedUserData);
+      
+      // Validate password
+      if (userData.password !== password) {
+        throw new Error('Invalid password');
+      }
 
-    localStorage.setItem('taskflow_auth', JSON.stringify(user));
-    setCurrentUser(user);
-    setIsAuthenticated(true);
+      // Create user object for session
+      const user = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email
+      };
 
-    return user;
+      localStorage.setItem('taskflow_auth', JSON.stringify(user));
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+
+      return user;
+    } catch (error) {
+      throw error;
+    }
   };
 
   const logout = () => {
@@ -90,14 +105,14 @@ export const AuthProvider = ({ children }) => {
 
   const getUserData = () => {
     if (!currentUser) return null;
-    const dataKey = `taskflow_${currentUser.email}`;
+    const dataKey = `taskflow_data_${currentUser.email}`;
     const data = localStorage.getItem(dataKey);
     return data ? JSON.parse(data) : { projects: [], tasks: [], activityLog: [] };
   };
 
   const saveUserData = (data) => {
     if (!currentUser) return false;
-    const dataKey = `taskflow_${currentUser.email}`;
+    const dataKey = `taskflow_data_${currentUser.email}`;
     localStorage.setItem(dataKey, JSON.stringify(data));
     return true;
   };

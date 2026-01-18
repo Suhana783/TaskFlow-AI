@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import taskRoutes from './routes/task.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 dotenv.config();
 
@@ -16,10 +18,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running', timestamp: new Date() });
 });
 
+// Routes
+app.use('/api/tasks', taskRoutes);
+app.use('/api/users', userRoutes);
+
 // Routes will be added here
 // app.use('/api/auth', authRoutes);
 // app.use('/api/projects', projectRoutes);
-// app.use('/api/tasks', taskRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

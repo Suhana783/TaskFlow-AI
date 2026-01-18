@@ -1,25 +1,73 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import taskAPI from '../utils/taskAPI';
+import socket from '../utils/socket';
 import './Insights.css';
 
 const Insights = () => {
-  const { getUserData } = useAuth();
+  const { getUserData, currentUser } = useAuth();
   const [userData, setUserData] = useState(null);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Load tasks from API
+  const loadTasks = async () => {
+    if (!currentUser) return;
+    
+    try {
+      // Use email as primary userId for consistency
+      const userId = currentUser.email || currentUser.id;
+      console.log('📈 Insights loading tasks for userId:', userId);
+      const userTasks = await taskAPI.getTasksByUser(userId);
+      console.log('📈 Insights loaded tasks:', userTasks.length);
+      setTasks(userTasks);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      setTasks([]);
+    }
+  };
 
   useEffect(() => {
     const data = getUserData();
     setUserData(data);
+    
+    // Load tasks from API
+    loadTasks();
     setLoading(false);
-  }, []);
+  }, [currentUser]);
+
+  // Listen for real-time task updates
+  useEffect(() => {
+    const handleTaskCreated = () => {
+      loadTasks();
+    };
+
+    const handleTaskUpdated = () => {
+      loadTasks();
+    };
+
+    const handleTaskDeleted = () => {
+      loadTasks();
+    };
+
+    socket.on('task-created', handleTaskCreated);
+    socket.on('task-updated', handleTaskUpdated);
+    socket.on('task-deleted', handleTaskDeleted);
+
+    return () => {
+      socket.off('task-created', handleTaskCreated);
+      socket.off('task-updated', handleTaskUpdated);
+      socket.off('task-deleted', handleTaskDeleted);
+    };
+  }, [currentUser]);
 
   if (loading) {
     return <div className="page-container"><p>Loading...</p></div>;
   }
 
   const projects = userData?.projects || [];
-  const hasData = projects.length > 0;
+  const hasData = tasks.length > 0;
 
   if (!hasData) {
     return (
@@ -39,15 +87,30 @@ const Insights = () => {
     );
   }
 
-  // Calculate stats from user's data
-  const allTasks = projects.flatMap(p => p.tasks || []);
-  const todoTasks = allTasks.filter(t => t.status === 'todo').length;
-  const inProgressTasks = allTasks.filter(t => t.status === 'in-progress').length;
-  const doneTasks = allTasks.filter(t => t.status === 'done').length;
-  const totalTasks = allTasks.length;
+  // Calculate stats from actual tasks data
+  const todoTasks = tasks.filter(t => t.status === 'todo').length;
+  const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
+  const doneTasks = tasks.filter(t => t.status === 'done').length;
+  const totalTasks = tasks.length;
 
-  const highPriorityTasks = allTasks.filter(t => t.priority === 'high').length;
-  const mediumPriorityTasks = allTasks.filter(t => t.priority === 'medium').length;
+  const highPriorityTasks = tasks.filter(t => t.priority === 'high').length;
+  const mediumPriorityTasks = tasks.filter(t => t.priority === 'medium').length;
+  const lowPriorityTasks = tasks.filter(t => t.priority === 'low').length;
+
+  // Group tasks by project for project completion chart
+  const tasksByProject = {};
+  tasks.forEach(task => {
+    if (!tasksByProject[task.projectId]) {
+      tasksByProject[task.projectId] = {
+        total: 0,
+        done: 0
+      };
+    }
+    tasksByProject[task.projectId].total++;
+    if (task.status === 'done') {
+      tasksByProject[task.projectId].done++;
+    }
+  });
 
   return (
     <div className="page-container">
@@ -124,16 +187,28 @@ const Insights = () => {
                   ></div>
                   <span className="chart-label">Medium: {mediumPriorityTasks}</span>
                 </div>
+                <div className="chart-item">
+                  <div 
+                    className="chart-color-box" 
+                    style={{ backgroundColor: '#3b82f6' }}
+                  ></div>
+                  <span className="chart-label">Low: {lowPriorityTasks}</span>
+                </div>
               </div>
               <div className="pie-visual">
                 {highPriorityTasks > 0 && (
-                  <div className="pie-segment red" style={{ '--percentage': `${(highPriorityTasks / (highPriorityTasks + mediumPriorityTasks)) * 100}%` }}>
+                  <div className="pie-segment red" style={{ '--percentage': `${(highPriorityTasks / totalTasks) * 100}%` }}>
                     <span>High: {highPriorityTasks}</span>
                   </div>
                 )}
                 {mediumPriorityTasks > 0 && (
-                  <div className="pie-segment yellow" style={{ '--percentage': `${(mediumPriorityTasks / (highPriorityTasks + mediumPriorityTasks)) * 100}%` }}>
+                  <div className="pie-segment yellow" style={{ '--percentage': `${(mediumPriorityTasks / totalTasks) * 100}%` }}>
                     <span>Medium: {mediumPriorityTasks}</span>
+                  </div>
+                )}
+                {lowPriorityTasks > 0 && (
+                  <div className="pie-segment blue" style={{ '--percentage': `${(lowPriorityTasks / totalTasks) * 100}%` }}>
+                    <span>Low: {lowPriorityTasks}</span>
                   </div>
                 )}
               </div>
@@ -142,23 +217,32 @@ const Insights = () => {
         </div>
 
         {/* Project Completion Status */}
-        {projects.length > 0 && (
+        {projects.length > 0 && Object.keys(tasksByProject).length > 0 && (
           <div className="insight-card full-width">
             <h3 className="insight-title">Project Completion Status</h3>
             <div className="bar-chart">
-              {projects.map(project => (
-                <div key={project.id} className="bar-item">
-                  <div className="bar-label">{project.name}</div>
-                  <div className="bar-container">
-                    <div 
-                      className="bar-fill green" 
-                      style={{ width: `${project.progress || 0}%` }}
-                    >
-                      {project.progress || 0}%
+              {projects.map(project => {
+                const projectTasks = tasksByProject[project.id];
+                const completion = projectTasks 
+                  ? Math.round((projectTasks.done / projectTasks.total) * 100) 
+                  : 0;
+                
+                return (
+                  <div key={project.id} className="bar-item">
+                    <div className="bar-label">
+                      {project.name} ({projectTasks?.done || 0}/{projectTasks?.total || 0})
+                    </div>
+                    <div className="bar-container">
+                      <div 
+                        className="bar-fill green" 
+                        style={{ width: `${completion}%` }}
+                      >
+                        {completion}%
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

@@ -4,33 +4,91 @@ import StatCard from '../components/StatCard';
 import ProjectCard from '../components/ProjectCard';
 import ProgressBar from '../components/ProgressBar';
 import { useAuth } from '../context/AuthContext';
+import taskAPI from '../utils/taskAPI';
+import socket from '../utils/socket';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { currentUser, getUserData } = useAuth();
   const [userData, setUserData] = useState(null);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Load tasks from API
+  const loadTasks = async () => {
+    if (!currentUser) return;
+    
+    try {
+      // Use email as primary userId for consistency
+      const userId = currentUser.email || currentUser.id;
+      console.log('📊 Dashboard loading tasks for userId:', userId);
+      const userTasks = await taskAPI.getTasksByUser(userId);
+      console.log('📊 Dashboard loaded tasks:', userTasks.length);
+      setTasks(userTasks);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      setTasks([]);
+    }
+  };
 
   useEffect(() => {
     // Load user's specific data from localStorage
     const data = getUserData();
     setUserData(data);
+    
+    // Load tasks from API
+    loadTasks();
     setLoading(false);
-  }, []);
+  }, [currentUser]);
+
+  // Listen for real-time task updates
+  useEffect(() => {
+    const handleTaskCreated = () => {
+      loadTasks();
+    };
+
+    const handleTaskUpdated = () => {
+      loadTasks();
+    };
+
+    const handleTaskDeleted = () => {
+      loadTasks();
+    };
+
+    socket.on('task-created', handleTaskCreated);
+    socket.on('task-updated', handleTaskUpdated);
+    socket.on('task-deleted', handleTaskDeleted);
+
+    return () => {
+      socket.off('task-created', handleTaskCreated);
+      socket.off('task-updated', handleTaskUpdated);
+      socket.off('task-deleted', handleTaskDeleted);
+    };
+  }, [currentUser]);
 
   if (loading) {
     return <div className="page-container"><p>Loading...</p></div>;
   }
 
-  // Calculate stats from user's own projects data
-  const projects = userData?.projects || [];
-  const totalTasks = projects.reduce((sum, project) => sum + (project.totalTasks || 0), 0);
-  const completedTasks = projects.reduce((sum, project) => sum + (project.completedTasks || 0), 0);
-  const inProgressTasks = projects.reduce((sum, project) => {
-    return sum + (project.tasks?.filter(task => task.status === 'in-progress').length || 0);
-  }, 0);
-  const overdueTasks = 0; // Calculate based on due dates if needed
+  // Calculate stats from actual tasks data
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.status === 'done').length;
+  const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
+  
+  // Calculate overdue tasks (due date < today AND not done)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const overdueTasks = tasks.filter(t => {
+    if (t.status === 'done' || !t.dueDate) return false;
+    const dueDate = new Date(t.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+    return dueDate < today;
+  }).length;
 
+  // Calculate overall progress percentage
+  const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  const projects = userData?.projects || [];
   const activityLog = userData?.activityLog || [];
 
   return (
@@ -132,8 +190,7 @@ const Dashboard = () => {
           <h2 className="section-title">Overall Progress</h2>
           <ProgressBar 
             label={`${completedTasks} of ${totalTasks} tasks completed`}
-            current={completedTasks}
-            total={totalTasks}
+            percentage={overallProgress}
           />
         </div>
       </div>

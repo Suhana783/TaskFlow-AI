@@ -1,15 +1,26 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import './Settings.css';
 
 const Settings = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState({
     name: '',
     email: '',
     role: 'User'
   });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
 
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
@@ -36,6 +47,15 @@ const Settings = () => {
     });
   };
 
+  const handlePasswordChange = (e) => {
+    setPasswordData({
+      ...passwordData,
+      [e.target.name]: e.target.value
+    });
+    setPasswordError('');
+    setPasswordSuccess('');
+  };
+
   const handleNotificationToggle = (key) => {
     setNotifications({
       ...notifications,
@@ -46,6 +66,65 @@ const Settings = () => {
   const handleSaveProfile = (e) => {
     e.preventDefault();
     alert('Profile updated successfully!');
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validate inputs
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError('All password fields are required');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/users/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setPasswordError(result.error || 'Failed to change password');
+        return;
+      }
+
+      setPasswordSuccess('Password changed successfully! Please log in again.');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+
+      // Log out user after 2 seconds
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 2000);
+    } catch (error) {
+      setPasswordError('Failed to change password. Please try again.');
+      console.error('Error changing password:', error);
+    }
   };
 
   return (
@@ -100,23 +179,55 @@ const Settings = () => {
           {/* Change Password */}
           <div className="settings-section">
             <h2 className="settings-title">Change Password</h2>
-            <form className="settings-form">
+            <form className="settings-form" onSubmit={handleChangePassword}>
+              {passwordError && (
+                <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fee2e2', borderRadius: '0.375rem' }}>
+                  {passwordError}
+                </div>
+              )}
+              {passwordSuccess && (
+                <div style={{ color: '#10b981', marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#d1fae5', borderRadius: '0.375rem' }}>
+                  {passwordSuccess}
+                </div>
+              )}
+              
               <div className="form-group">
                 <label>Current Password</label>
-                <input type="password" placeholder="••••••••" />
+                <input 
+                  type="password" 
+                  name="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="••••••••" 
+                  required
+                />
               </div>
 
               <div className="form-group">
                 <label>New Password</label>
-                <input type="password" placeholder="••••••••" />
+                <input 
+                  type="password" 
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="••••••••" 
+                  required
+                />
               </div>
 
               <div className="form-group">
                 <label>Confirm New Password</label>
-                <input type="password" placeholder="••••••••" />
+                <input 
+                  type="password" 
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="••••••••" 
+                  required
+                />
               </div>
 
-              <button type="button" className="save-btn">
+              <button type="submit" className="save-btn">
                 Update Password
               </button>
             </form>
@@ -188,22 +299,6 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Appearance */}
-          <div className="settings-section">
-            <h2 className="settings-title">Appearance</h2>
-            <div className="settings-toggles">
-              <div className="toggle-item">
-                <div className="toggle-info">
-                  <h4>Dark Mode</h4>
-                  <p>Switch to dark theme (Coming Soon)</p>
-                </div>
-                <label className="toggle-switch">
-                  <input type="checkbox" disabled />
-                  <span className="toggle-slider disabled"></span>
-                </label>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

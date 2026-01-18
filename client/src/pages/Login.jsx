@@ -38,7 +38,7 @@ const Login = () => {
       login(formData.email, formData.password);
       navigate('/dashboard');
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError(err.message || 'Login failed. Please check your credentials.');
     }
   };
 

@@ -1,6 +1,6 @@
 import './TaskCard.css';
 
-const TaskCard = ({ task, onMove, onStatusChange }) => {
+const TaskCard = ({ task, onMove, onDelete, onStatusChange }) => {
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'high': return 'red';
@@ -16,7 +16,29 @@ const TaskCard = ({ task, onMove, onStatusChange }) => {
         <span className={`task-priority ${getPriorityColor(task.priority)}`}>
           {task.priority}
         </span>
-        <span className="task-date">📅 {task.dueDate}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="task-date">📅 {task.dueDate}</span>
+          {onDelete && (
+            <button 
+              onClick={() => onDelete(task)}
+              className="task-delete-btn"
+              title="Delete task"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '16px',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.background = '#fee'}
+              onMouseLeave={(e) => e.target.style.background = 'none'}
+            >
+              🗑️
+            </button>
+          )}
+        </div>
       </div>
       
       <h4 className="task-title">{task.title}</h4>
